@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.studentmanagement.mapper.StudentMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.studentmanagement.entity.Student">
+        <id column="id" property="id"/>
+        <result column="student_no" property="studentNo"/>
+        <result column="name" property="name"/>
+        <result column="gender" property="gender"/>
+        <result column="age" property="age"/>
+        <result column="class_name" property="className"/>
+        <result column="phone" property="phone"/>
+        <result column="email" property="email"/>
+        <result column="address" property="address"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, student_no, name, gender, age, class_name, phone, email, address, create_time, update_time
+    </sql>
+
+    <select id="list" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM student
+        <where>
+            <if test="query.keyword != null and query.keyword != ''">
+                AND (name LIKE CONCAT('%', #{query.keyword}, '%')
+                OR student_no LIKE CONCAT('%', #{query.keyword}, '%')
+                OR phone LIKE CONCAT('%', #{query.keyword}, '%')
+                OR class_name LIKE CONCAT('%', #{query.keyword}, '%'))
+            </if>
+            <if test="query.studentNo != null and query.studentNo != ''">
+                AND student_no = #{query.studentNo}
+            </if>
+            <if test="query.name != null and query.name != ''">
+                AND name LIKE CONCAT('%', #{query.name}, '%')
+            </if>
+            <if test="query.gender != null and query.gender != ''">
+                AND gender = #{query.gender}
+            </if>
+            <if test="query.className != null and query.className != ''">
+                AND class_name = #{query.className}
+            </if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="count" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM student
+        <where>
+            <if test="query.keyword != null and query.keyword != ''">
+                AND (name LIKE CONCAT('%', #{query.keyword}, '%')
+                OR student_no LIKE CONCAT('%', #{query.keyword}, '%')
+                OR phone LIKE CONCAT('%', #{query.keyword}, '%')
+                OR class_name LIKE CONCAT('%', #{query.keyword}, '%'))
+            </if>
+            <if test="query.studentNo != null and query.studentNo != ''">
+                AND student_no = #{query.studentNo}
+            </if>
+            <if test="query.name != null and query.name != ''">
+                AND name LIKE CONCAT('%', #{query.name}, '%')
+            </if>
+            <if test="query.gender != null and query.gender != ''">
+                AND gender = #{query.gender}
+            </if>
+            <if test="query.className != null and query.className != ''">
+                AND class_name = #{query.className}
+            </if>
+        </where>
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM student
+        WHERE id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO student (student_no, name, gender, age, class_name, phone, email, address, create_time, update_time)
+        VALUES (#{studentNo}, #{name}, #{gender}, #{age}, #{className}, #{phone}, #{email}, #{address}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="update">
+        UPDATE student
+        <set>
+            <if test="studentNo != null">student_no = #{studentNo},</if>
+            <if test="name != null">name = #{name},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="age != null">age = #{age},</if>
+            <if test="className != null">class_name = #{className},</if>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="address != null">address = #{address},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM student WHERE id = #{id}
+    </delete>
+
+</mapper>

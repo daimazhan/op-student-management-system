@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.studentmanagement.mapper.MenuMapper">
+
+    <resultMap id="BaseResultMap" type="com.example.studentmanagement.entity.Menu">
+        <id column="id" property="id"/>
+        <result column="name" property="name"/>
+        <result column="path" property="path"/>
+        <result column="component" property="component"/>
+        <result column="icon" property="icon"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="sort" property="sort"/>
+        <result column="type" property="type"/>
+        <result column="permission" property="permission"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, name, path, component, icon, parent_id, sort, type, permission, status, create_time, update_time
+    </sql>
+
+    <select id="list" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM menu
+        WHERE status = 1
+        ORDER BY sort ASC, id ASC
+    </select>
+
+    <select id="listByRole" resultMap="BaseResultMap">
+        SELECT DISTINCT m.id, m.name, m.path, m.component, m.icon, m.parent_id, 
+               m.sort, m.type, m.permission, m.status, m.create_time, m.update_time
+        FROM menu m
+        INNER JOIN role_menu rm ON m.id = rm.menu_id
+        WHERE rm.role_id = #{role} AND m.status = 1
+        ORDER BY m.sort ASC, m.id ASC
+    </select>
+
+    <select id="findById" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM menu
+        WHERE id = #{id}
+    </select>
+
+    <select id="listByParentId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM menu
+        WHERE parent_id = #{parentId} AND status = 1
+        ORDER BY sort ASC, id ASC
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO menu (name, path, component, icon, parent_id, sort, type, permission, status, create_time, update_time)
+        VALUES (#{name}, #{path}, #{component}, #{icon}, #{parentId}, #{sort}, #{type}, #{permission}, #{status}, #{createTime}, #{updateTime})
+    </insert>
+
+    <update id="update">
+        UPDATE menu
+        <set>
+            <if test="name != null">name = #{name},</if>
+            <if test="path != null">path = #{path},</if>
+            <if test="component != null">component = #{component},</if>
+            <if test="icon != null">icon = #{icon},</if>
+            <if test="parentId != null">parent_id = #{parentId},</if>
+            <if test="sort != null">sort = #{sort},</if>
+            <if test="type != null">type = #{type},</if>
+            <if test="permission != null">permission = #{permission},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="updateTime != null">update_time = #{updateTime}</if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        DELETE FROM menu WHERE id = #{id}
+    </delete>
+
+</mapper>
