@@ -47,14 +47,14 @@ const componentMap = {
   'system/Menu': () => import('@/views/system/Menu.vue'),
   'system/User': () => import('@/views/system/User.vue'),
   'system/Role': () => import('@/views/system/Role.vue'),
-  // 也可以支持小写开头的格式
+  'system/Log': () => import('@/views/system/Log.vue'),
   'dashboard/dashboard': () => import('@/views/dashboard/Dashboard.vue'),
   'student/student': () => import('@/views/student/Student.vue'),
   'class/class': () => import('@/views/class/Class.vue'),
   'system/menu': () => import('@/views/system/Menu.vue'),
   'system/user': () => import('@/views/system/User.vue'),
   'system/role': () => import('@/views/system/Role.vue'),
-  // 可以根据需要添加更多组件映射
+  'system/log': () => import('@/views/system/Log.vue')
 }
 
 // 获取组件加载函数

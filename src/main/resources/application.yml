@@ -6,13 +6,13 @@ spring:
     name: student-management-system
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/student_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://192.168.1.25:3306/student_db?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai
     username: root
     password: mysql.123M
   # Redis 配置
   data:
     redis:
-      host: localhost
+      host: 192.168.1.25
       port: 6379
       password: redis.123R
       database: 0

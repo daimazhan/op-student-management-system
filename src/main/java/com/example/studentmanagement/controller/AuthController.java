@@ -1,7 +1,9 @@
 package com.example.studentmanagement.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.example.studentmanagement.annotation.LogOperation;
 import com.example.studentmanagement.dto.ChangePasswordDTO;
+import com.example.studentmanagement.enums.OperationType;
 import com.example.studentmanagement.dto.LoginDTO;
 import com.example.studentmanagement.dto.UserProfileDTO;
 import com.example.studentmanagement.entity.User;
@@ -22,6 +24,7 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/login")
+    @LogOperation(operationType = OperationType.LOGIN, operationModule = "认证授权", operationContent = "用户登录")
     public Result<Map<String, Object>> login(@Valid @RequestBody LoginDTO loginDTO) {
         User user = userService.login(loginDTO.getUsername(), loginDTO.getPassword());
         if (user != null) {
@@ -39,12 +42,14 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
+    @LogOperation(operationType = OperationType.LOGOUT, operationModule = "认证授权", operationContent = "用户登出")
     public Result<?> logout() {
         StpUtil.logout();
         return Result.success("登出成功");
     }
 
     @GetMapping("/info")
+    @LogOperation(operationType = OperationType.QUERY, operationModule = "认证授权", operationContent = "查询用户信息")
     public Result<Map<String, Object>> getUserInfo() {
         Long userId = StpUtil.getLoginIdAsLong();
         User user = userService.getById(userId);
@@ -64,6 +69,7 @@ public class AuthController {
      * 更新当前用户的基本信息
      */
     @PutMapping("/profile")
+    @LogOperation(operationType = OperationType.UPDATE, operationModule = "认证授权", operationContent = "更新个人信息")
     public Result<?> updateProfile(@Valid @RequestBody UserProfileDTO profileDTO) {
         try {
             Long userId = StpUtil.getLoginIdAsLong();
@@ -85,6 +91,7 @@ public class AuthController {
      * 修改当前登录用户的密码
      */
     @PutMapping("/change-password")
+    @LogOperation(operationType = OperationType.UPDATE, operationModule = "认证授权", operationContent = "修改密码")
     public Result<?> changePassword(@Valid @RequestBody ChangePasswordDTO changePasswordDTO) {
         try {
             Long userId = StpUtil.getLoginIdAsLong();

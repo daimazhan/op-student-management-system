@@ -1,7 +1,9 @@
 package com.example.studentmanagement.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.example.studentmanagement.annotation.LogOperation;
 import com.example.studentmanagement.entity.Role;
+import com.example.studentmanagement.enums.OperationType;
 import com.example.studentmanagement.service.RoleService;
 import com.example.studentmanagement.vo.Result;
 import jakarta.validation.Valid;
@@ -24,6 +26,7 @@ public class RoleController {
      */
     @GetMapping("/list")
     @SaCheckPermission("role:view")
+    @LogOperation(operationType = OperationType.QUERY, operationModule = "角色管理", operationContent = "查询角色列表")
     public Result<List<Role>> list() {
         List<Role> list = roleService.list();
         return Result.success(list);
@@ -34,6 +37,7 @@ public class RoleController {
      */
     @GetMapping("/{id}")
     @SaCheckPermission("role:view")
+    @LogOperation(operationType = OperationType.QUERY, operationModule = "角色管理", operationContent = "查询角色详情")
     public Result<Role> getById(@PathVariable Long id) {
         Role role = roleService.getById(id);
         return Result.success(role);
@@ -44,6 +48,7 @@ public class RoleController {
      */
     @PostMapping
     @SaCheckPermission("role:add")
+    @LogOperation(operationType = OperationType.ADD, operationModule = "角色管理", operationContent = "新增角色")
     public Result<?> save(@Valid @RequestBody Role role) {
         try {
             roleService.save(role);
@@ -58,6 +63,7 @@ public class RoleController {
      */
     @PutMapping
     @SaCheckPermission("role:edit")
+    @LogOperation(operationType = OperationType.UPDATE, operationModule = "角色管理", operationContent = "更新角色")
     public Result<?> update(@Valid @RequestBody Role role) {
         try {
             roleService.update(role);
@@ -72,6 +78,7 @@ public class RoleController {
      */
     @DeleteMapping("/{id}")
     @SaCheckPermission("role:delete")
+    @LogOperation(operationType = OperationType.DELETE, operationModule = "角色管理", operationContent = "删除角色")
     public Result<?> delete(@PathVariable Long id) {
         try {
             roleService.delete(id);
@@ -86,6 +93,7 @@ public class RoleController {
      */
     @PostMapping("/assign-menu")
     @SaCheckPermission("role:assign")
+    @LogOperation(operationType = OperationType.UPDATE, operationModule = "角色管理", operationContent = "分配菜单权限")
     public Result<?> assignMenuToRole(@RequestBody Map<String, Object> params) {
         Long roleId = Long.valueOf(params.get("roleId").toString());
         @SuppressWarnings("unchecked")
@@ -112,6 +120,7 @@ public class RoleController {
      */
     @GetMapping("/{roleId}/menus")
     @SaCheckPermission("role:view")
+    @LogOperation(operationType = OperationType.QUERY, operationModule = "角色管理", operationContent = "查询角色菜单权限")
     public Result<List<Long>> getMenuIdsByRole(@PathVariable Long roleId) {
         List<Long> menuIds = roleService.getMenuIdsByRole(roleId);
         return Result.success(menuIds);
