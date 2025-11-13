@@ -24,7 +24,7 @@ public class SaTokenConfig implements WebMvcConfigurer {
     private final MenuMapper menuMapper;
 
     @Override
-    public void addInterceptors(InterceptorRegistry registry) {
+    public void addInterceptors(@SuppressWarnings("null") InterceptorRegistry registry) {
         registry.addInterceptor(new SaInterceptor(handle -> {
             SaRouter.match("/**")
                     .notMatch("/api/auth/login", "/api/auth/register")
