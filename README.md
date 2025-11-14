@@ -2,6 +2,11 @@
 
 基于 Spring Boot 3.x + Vue 3 + Element Plus 的全栈学生管理系统
 
+![dashboard](/doc/2.png)
+![login](/doc/1.png)
+![log](/doc/3.png)
+![student](/doc/4.png)
+
 ## 技术栈
 
 ### 后端
