@@ -36,7 +36,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="6" :lg="6">
+      <el-col v-if="isAdmin" :xs="24" :sm="12" :md="6" :lg="6">
         <el-card class="stat-card" @click="handleCardClick('user')">
           <div class="stat-content">
             <div class="stat-icon user">
@@ -49,7 +49,7 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="12" :md="6" :lg="6">
+      <el-col v-if="isAdmin" :xs="24" :sm="12" :md="6" :lg="6">
         <el-card class="stat-card" @click="handleCardClick('role')">
           <div class="stat-content">
             <div class="stat-icon role">
@@ -67,7 +67,7 @@
     <!-- 图表区域 -->
     <el-row :gutter="20" class="charts-row">
       <!-- 左侧：统计图表 -->
-      <el-col :xs="24" :sm="24" :md="12" :lg="12">
+      <el-col :xs="24" :sm="24" :md="isAdmin ? 12 : 24" :lg="isAdmin ? 12 : 24">
         <el-card class="chart-card">
           <template #header>
             <div class="card-header">
@@ -77,7 +77,7 @@
           <div ref="genderChartRef" class="chart-container"></div>
         </el-card>
       </el-col>
-      <el-col :xs="24" :sm="24" :md="12" :lg="12">
+      <el-col v-if="isAdmin" :xs="24" :sm="24" :md="12" :lg="12">
         <el-card class="chart-card">
           <template #header>
             <div class="card-header">
@@ -91,7 +91,7 @@
 
     <el-row :gutter="20" class="charts-row">
       <!-- 班级人数分布 -->
-      <el-col :xs="24" :sm="24" :md="12" :lg="12">
+      <el-col :xs="24" :sm="24" :md="isAdmin ? 12 : 24" :lg="isAdmin ? 12 : 24">
         <el-card class="chart-card">
           <template #header>
             <div class="card-header">
@@ -102,7 +102,7 @@
         </el-card>
       </el-col>
       <!-- 操作日志趋势 -->
-      <el-col :xs="24" :sm="24" :md="12" :lg="12">
+      <el-col v-if="isAdmin" :xs="24" :sm="24" :md="12" :lg="12">
         <el-card class="chart-card">
           <template #header>
             <div class="card-header">
@@ -110,15 +110,16 @@
             </div>
           </template>
           <div ref="operationTrendChartRef" class="chart-container"></div>
-        </el-card>
+    </el-card>
       </el-col>
     </el-row>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
+import { useUserStore } from '@/store/user'
 import { getStudentList } from '@/api/student'
 import { getClassList } from '@/api/class'
 import { getUserList } from '@/api/user'
@@ -128,6 +129,12 @@ import { User, School, UserFilled, Lock, Refresh } from '@element-plus/icons-vue
 import * as echarts from 'echarts'
 
 const router = useRouter()
+const userStore = useUserStore()
+
+// 判断是否是管理员
+const isAdmin = computed(() => {
+  return userStore.userInfo?.role === 'ADMIN'
+})
 
 const stats = ref({
   studentCount: 0,
@@ -169,27 +176,51 @@ const updateRefreshTime = () => {
 // 加载统计数据
 const loadStats = async () => {
   try {
-    const [studentRes, classRes, userRes, roleRes] = await Promise.all([
+    // 基础数据：所有用户都可以访问
+    const requests = [
       getStudentList({ pageNum: 1, pageSize: 1 }),
-      getClassList(),
-      getUserList(),
-      getRoleList()
-    ])
+      getClassList()
+    ]
+    
+    // 管理员专属数据
+    if (isAdmin.value) {
+      requests.push(getUserList(), getRoleList())
+    }
+    
+    const results = await Promise.all(requests)
+    const studentRes = results[0]
+    const classRes = results[1]
+    
     if (studentRes.code === 200) {
       stats.value.studentCount = studentRes.data.total || 0
     }
     if (classRes.code === 200) {
       stats.value.classCount = classRes.data?.length || 0
     }
-    if (userRes.code === 200) {
-      stats.value.userCount = userRes.data?.length || 0
+    
+    // 管理员专属数据处理
+    if (isAdmin.value) {
+      const userRes = results[2]
+      const roleRes = results[3]
+      if (userRes?.code === 200) {
+        stats.value.userCount = userRes.data?.length || 0
+      }
+      if (roleRes?.code === 200) {
+        stats.value.roleCount = roleRes.data?.length || 0
+      }
+    } else {
+      // 普通用户重置管理相关数据
+      stats.value.userCount = 0
+      stats.value.roleCount = 0
     }
-    if (roleRes.code === 200) {
-      stats.value.roleCount = roleRes.data?.length || 0
-    }
+    
     updateRefreshTime()
   } catch (error) {
+    console.error('加载统计数据失败:', error)
+    // 如果权限不足，忽略错误（不显示错误信息）
+    if (error?.response?.status !== 403 && error?.response?.status !== 401) {
     console.error(error)
+    }
   }
 }
 
@@ -382,6 +413,11 @@ const loadClassChart = async () => {
 
 // 加载操作类型分布图表
 const loadOperationTypeChart = async () => {
+  // 只有管理员可以查看操作日志
+  if (!isAdmin.value) {
+    return
+  }
+  
   try {
     const typeRes = await getStatisticsByType()
     if (typeRes.code === 200 && operationTypeChart) {
@@ -441,12 +477,20 @@ const loadOperationTypeChart = async () => {
       })
     }
   } catch (error) {
-    console.error('加载操作类型分布图表失败:', error)
+    // 权限不足时，不显示错误信息
+    if (error?.response?.status !== 403 && error?.response?.status !== 401) {
+      console.error('加载操作类型分布图表失败:', error)
+    }
   }
 }
 
 // 加载操作日志趋势图表
 const loadOperationTrendChart = async () => {
+  // 只有管理员可以查看操作日志
+  if (!isAdmin.value) {
+    return
+  }
+  
   try {
     const dateRes = await getStatisticsByDate()
     if (dateRes.code === 200 && operationTrendChart) {
@@ -526,7 +570,10 @@ const loadOperationTrendChart = async () => {
       })
     }
   } catch (error) {
-    console.error('加载操作日志趋势图表失败:', error)
+    // 权限不足时，不显示错误信息
+    if (error?.response?.status !== 403 && error?.response?.status !== 401) {
+      console.error('加载操作日志趋势图表失败:', error)
+    }
   }
 }
 
@@ -541,18 +588,24 @@ const handleResize = () => {
 // 初始化图表
 const initCharts = () => {
   nextTick(() => {
+    // 基础图表：所有用户都可以查看
     if (genderChartRef.value) {
       genderChart = echarts.init(genderChartRef.value)
     }
     if (classChartRef.value) {
       classChart = echarts.init(classChartRef.value)
     }
-    if (operationTypeChartRef.value) {
-      operationTypeChart = echarts.init(operationTypeChartRef.value)
+    
+    // 管理员专属图表
+    if (isAdmin.value) {
+      if (operationTypeChartRef.value) {
+        operationTypeChart = echarts.init(operationTypeChartRef.value)
+      }
+      if (operationTrendChartRef.value) {
+        operationTrendChart = echarts.init(operationTrendChartRef.value)
+      }
     }
-    if (operationTrendChartRef.value) {
-      operationTrendChart = echarts.init(operationTrendChartRef.value)
-    }
+    
     window.addEventListener('resize', handleResize)
     loadAllCharts()
   })
@@ -560,13 +613,18 @@ const initCharts = () => {
 
 // 加载所有图表数据
 const loadAllCharts = async () => {
-  await Promise.all([
+  const tasks = [
     loadStats(),
     loadGenderChart(),
-    loadClassChart(),
-    loadOperationTypeChart(),
-    loadOperationTrendChart()
-  ])
+    loadClassChart()
+  ]
+  
+  // 管理员专属图表
+  if (isAdmin.value) {
+    tasks.push(loadOperationTypeChart(), loadOperationTrendChart())
+  }
+  
+  await Promise.all(tasks)
 }
 
 // 卡片点击跳转
