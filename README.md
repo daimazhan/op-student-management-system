@@ -146,5 +146,5 @@ npm run dev
 - 使用 Vue Router 进行路由管理
 - 使用 Element Plus 组件库
 
-
-
+## 技术指导
+微信：daimazhan
