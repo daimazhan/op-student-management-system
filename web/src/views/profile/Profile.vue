@@ -83,6 +83,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { getUserInfo, updateProfile, changePassword } from '@/api/auth'
 import { useUserStore } from '@/store/user'
+import { getRoleList } from '@/api/role'
 
 const formRef = ref(null)
 const passwordFormRef = ref(null)
@@ -99,6 +100,18 @@ const formData = reactive({
   email: '',
   phone: ''
 })
+
+const roleOptions = ref([])
+const roleMap = () => {
+  const map = {}
+  ;(roleOptions.value || []).forEach(r => {
+    if (r && r.roleCode) {
+      map[r.roleCode] = r.roleName || r.roleCode
+    }
+  })
+  return map
+}
+const roleNameOf = (code) => roleMap()[code] || code || ''
 
 const originalData = reactive({
   realName: '',
@@ -151,7 +164,7 @@ const loadUserInfo = async () => {
       formData.id = res.data.id
       formData.username = res.data.username || ''
       formData.role = res.data.role || ''
-      formData.roleName = res.data.role === 'ADMIN' ? '管理员' : '普通用户'
+      formData.roleName = roleNameOf(res.data.role)
       formData.realName = res.data.realName || ''
       formData.email = res.data.email || ''
       formData.phone = res.data.phone || ''
@@ -249,8 +262,20 @@ const handleChangePassword = async () => {
   })
 }
 
-onMounted(() => {
-  loadUserInfo()
+const loadRoles = async () => {
+  try {
+    const res = await getRoleList()
+    if (res.code === 200) {
+      roleOptions.value = res.data || []
+    }
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+onMounted(async () => {
+  await loadRoles()
+  await loadUserInfo()
 })
 </script>
 
